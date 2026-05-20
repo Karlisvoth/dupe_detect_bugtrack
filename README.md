@@ -1,6 +1,5 @@
 This project is inspired by this paper: https://www.mdpi.com/2076-3417/16/1/416
 
-Title
 =====
 
 Ender — A Minimal Bug Tracker with Automated Duplicate Detection
