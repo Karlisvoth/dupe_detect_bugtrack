@@ -1,6 +1,6 @@
 # Simple Bug Tracker with Duplicate Detection
 
-This is a small Flask app that implements a bug tracker with duplicate detection inspired by the linked paper.
+This is a small Flask app that implements a bug tracker with duplicate detection inspired by this paper: https://www.mdpi.com/2076-3417/16/1/416.
 
 Features:
 - Create bugs with title, description, severity
