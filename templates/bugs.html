@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block body %}
+<div class="page-header">
+  <div>
+    <h1>Bug list</h1>
+    <p class="subtitle">Browse all recorded bugs and click through to inspect each issue.</p>
+  </div>
+  <div>
+    <a href="/"><button>Home</button></a>
+    <a href="/report-bug"><button>New bug</button></a>
+  </div>
+</div>
+<div class="card" style="margin-bottom:20px;">
+  <form method="get" action="/bugs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;align-items:end;">
+    <div class="form-group" style="margin-bottom:0;">
+      <label>Search</label>
+      <input type="text" name="q" value="{{ q }}" placeholder="Search title or description">
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+      <label>Status</label>
+      <select name="status">
+        <option value="all" {% if status=='all' %}selected{% endif %}>All</option>
+        <option value="open" {% if status=='open' %}selected{% endif %}>Open</option>
+        <option value="being investigated" {% if status=='being investigated' %}selected{% endif %}>Being investigated</option>
+        <option value="fixed" {% if status=='fixed' %}selected{% endif %}>Fixed</option>
+        <option value="duplicate" {% if status=='duplicate' %}selected{% endif %}>Duplicate</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:0;">
+      <label>Severity</label>
+      <select name="severity">
+        <option value="all" {% if severity=='all' %}selected{% endif %}>All</option>
+        <option value="low" {% if severity=='low' %}selected{% endif %}>Low</option>
+        <option value="medium" {% if severity=='medium' %}selected{% endif %}>Medium</option>
+        <option value="high" {% if severity=='high' %}selected{% endif %}>High</option>
+        <option value="critical" {% if severity=='critical' %}selected{% endif %}>Critical</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+      <button type="submit">Apply</button>
+      <a href="/bugs"><button type="button" class="link-button">Reset</button></a>
+    </div>
+  </form>
+</div>
+<div class="card" style="margin-bottom:20px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;">
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+    <span class="badge active-filters">Active filters</span>
+    {% if not q and status=='all' and severity=='all' %}
+      <span class="note">None — showing all bugs.</span>
+    {% else %}
+      {% if q %}<span class="badge q-badge">"{{ q }}"</span>{% endif %}
+      {% if status != 'all' %}
+        <span class="badge {% if status == 'open' %}status-open{% elif status == 'being investigated' %}status-investigate{% elif status == 'fixed' %}status-fixed{% else %}status-fixed{% endif %}">{{ status }}</span>
+      {% endif %}
+      {% if severity != 'all' %}
+        <span class="badge sev-{{ severity }}">{{ severity }}</span>
+      {% endif %}
+    {% endif %}
+  </div>
+  <div class="meta">Search updates automatically as you type; filters apply instantly.</div>
+</div>
+<div class="grid">
+  {% for b in bugs %}
+    <div class="card">
+      <h3><a href="/bug/{{b.id}}">{{b.title}}</a></h3>
+      <div class="meta">#{{b.id}} • {{b.created_at}}</div>
+      <div class="badges">
+        <span class="badge sev-{{b.severity}}">{{b.severity}}</span>
+        {% if b.status == 'open' %}
+          <span class="badge status-open">open</span>
+        {% elif b.status == 'being investigated' %}
+          <span class="badge status-investigate">investigating</span>
+        {% elif b.status == 'fixed' %}
+          <span class="badge status-fixed">fixed</span>
+        {% elif b.status == 'duplicate' %}
+          <span class="badge status-duplicate">duplicate</span>
+        {% else %}
+          <span class="badge status-fixed">{{b.status}}</span>
+        {% endif %}
+      </div>
+      <p class="note">{{b.description[:220]}}{{"..." if b.description|length>220 else ""}}</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+        <a href="/bug/{{b.id}}">Open</a>
+        <span class="meta">{{b.comment_count or 0}} comments</span>
+      </div>
+    </div>
+  {% else %}
+    <div class="card"><p class="note">No bugs recorded yet. Create one from the report page.</p></div>
+  {% endfor %}
+</div>
+<script>
+  const filterForm = document.querySelector('form[action="/bugs"]');
+  if (filterForm) {
+    const searchInput = filterForm.querySelector('input[name="q"]');
+    const statusSelect = filterForm.querySelector('select[name="status"]');
+    const severitySelect = filterForm.querySelector('select[name="severity"]');
+    let debounceTimer;
+
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => filterForm.requestSubmit(), 450);
+      });
+    }
+    if (statusSelect) {
+      statusSelect.addEventListener('change', () => filterForm.requestSubmit());
+    }
+    if (severitySelect) {
+      severitySelect.addEventListener('change', () => filterForm.requestSubmit());
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block body %}
+<div class="page-header">
+  <div>
+    <h1>Zeph Bug Tracker</h1>
+    <p class="subtitle">For managing issues and duplicate detection.</p>
+  </div>
+  <div>
+    <a href="/report-bug"><button>Report a bug</button></a>
+    <a href="/bugs"><button>View bug list</button></a>
+  </div>
+</div>
+<div class="card">
+  <h2>Welcome to your issue control center</h2>
+  <p class="note">Use the buttons above to report a new bug or explore the current bug list. This space is your entry point for calm, tech-focused issue management.</p>
+</div>
+{% if recent_bugs %}
+<div class="card" style="margin-top:20px;">
+  <h2>Recent bugs</h2>
+  <div class="comments" style="margin-top:14px;">
+    {% for bug in recent_bugs %}
+      <div class="glass-panel" style="padding:16px;">
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
+          <div>
+            <h3 style="margin:0;font-size:1rem;"><a href="/bug/{{bug.id}}">{{bug.title}}</a></h3>
+            <div class="meta">#{{bug.id}} • {{bug.created_at}}</div>
+          </div>
+          <div class="badges">
+            <span class="badge sev-{{bug.severity}}">{{bug.severity}}</span>
+            {% if bug.status == 'open' %}
+              <span class="badge status-open">open</span>
+            {% elif bug.status == 'being investigated' %}
+              <span class="badge status-investigate">investigating</span>
+            {% elif bug.status == 'fixed' %}
+              <span class="badge status-fixed">fixed</span>
+            {% else %}
+              <span class="badge status-fixed">{{bug.status}}</span>
+            {% endif %}
+          </div>
+        </div>
+        <p class="note" style="margin-top:12px;">{{bug.description[:160]}}{{"..." if bug.description|length > 160 else ""}}</p>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

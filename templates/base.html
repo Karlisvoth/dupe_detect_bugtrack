@@ -1,0 +1,267 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Zeph Bug Tracker</title>
+    <style>
+      :root {
+        --bg: #08101c;
+        --surface: rgba(15, 23, 42, 0.95);
+        --surface-strong: rgba(8, 16, 28, 0.95);
+        --surface-soft: rgba(30, 41, 59, 0.9);
+        --text: #cbd5e1;
+        --text-muted: #94a3b8;
+        --accent: #7dd3fc;
+        --accent-soft: rgba(125, 211, 252, 0.18);
+        --border: rgba(125, 211, 252, 0.18);
+        --success: #22c55e;
+        --warning: #fbbf24;
+        --danger: #f472b6;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, 'Segoe UI', sans-serif;
+        background: radial-gradient(circle at 8% 8%, rgba(125, 211, 252, 0.16), transparent 22%),
+                    radial-gradient(circle at 95% 3%, rgba(56, 189, 248, 0.12), transparent 16%),
+                    linear-gradient(180deg, #050a12 0%, #08101c 100%);
+        color: var(--text);
+        min-height: 100vh;
+        padding: 28px;
+        position: relative;
+        overflow-x: hidden;
+        transition: background 0.45s ease, color 0.45s ease;
+      }
+      body::before,
+      body::after {
+        content: '';
+        position: absolute;
+        pointer-events: none;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.7;
+        animation: float 15s ease-in-out infinite;
+      }
+      body::before {
+        width: 420px;
+        height: 420px;
+        top: -120px;
+        left: -80px;
+        background: rgba(125, 211, 252, 0.14);
+      }
+      body::after {
+        width: 320px;
+        height: 320px;
+        bottom: -100px;
+        right: -60px;
+        background: rgba(56, 189, 248, 0.12);
+        animation-duration: 18s;
+      }
+      @keyframes float {
+        0%, 100% { transform: translateY(0px) translateX(0px); }
+        50% { transform: translateY(12px) translateX(8px); }
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        color: #a5f3fc;
+      }
+      h1 {
+        margin: 0;
+        font-size: 2rem;
+        letter-spacing: 0.02em;
+      }
+      h2, h3, h4 {
+        color: #e2e8f0;
+        margin: 0;
+      }
+      .page-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 24px;
+      }
+      .page-header .subtitle {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+      }
+      .page-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 20px;
+        align-items: start;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+      }
+      .card {
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(8, 16, 28, 0.95));
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        backdrop-filter: blur(18px);
+        padding: 22px;
+        box-shadow: 0 24px 80px rgba(15, 23, 42, 0.24);
+      }
+      .panel {
+        display: grid;
+        gap: 14px;
+      }
+      .form-group {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      input[type=text], select, textarea {
+        width: 100%;
+        background: rgba(15, 23, 42, 0.65);
+        border: 1px solid rgba(125, 211, 252, 0.16);
+        color: var(--text);
+        border-radius: 16px;
+        padding: 14px 16px;
+        font-size: 0.95rem;
+      }
+      textarea { min-height: 120px; resize: vertical; }
+      button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 0 18px;
+        border: none;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgba(125, 211, 252, 0.95), rgba(56, 189, 248, 0.85));
+        color: #020617;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      button:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(125, 211, 252, 0.22); }
+      .meta { color: var(--text-muted); font-size: 0.86rem; line-height: 1.5; }
+      .badges { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+      .badge { display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; padding: 6px 11px; font-size: 0.76rem; letter-spacing: 0.02em; color: #fff; background: rgba(148, 163, 184, 0.16); backdrop-filter: blur(12px); }
+      .badge.active-filters { background: rgba(14, 165, 233, 0.18); color: #dbeafe; }
+      .badge.q-badge { background: rgba(56, 189, 248, 0.18); color: #dbeafe; }
+      .badge.sev-low { background: rgba(148, 163, 184, 0.22); }
+      .badge.sev-medium { background: rgba(251, 191, 36, 0.22); }
+      .badge.sev-high { background: rgba(248, 113, 113, 0.22); }
+      .badge.sev-critical { background: rgba(168, 85, 247, 0.22); }
+      .badge.status-open { background: rgba(34, 197, 94, 0.22); }
+      .badge.status-investigate { background: rgba(56, 189, 248, 0.22); }
+      .badge.status-fixed { background: rgba(148, 163, 184, 0.22); }
+      
+      /* Light theme: badges should use dark text for readability */
+      body.theme-light .badge { color: #0f172a; }
+      body.theme-light .badge.active-filters { color: #0f172a; background: rgba(14,165,233,0.16); }
+      body.theme-light .badge.q-badge { color: #0f172a; background: rgba(56,189,248,0.16); }
+      /* stronger contrast for severity and status badges in light theme */
+      body.theme-light .badge.sev-low { background: rgba(148,163,184,0.28); }
+      body.theme-light .badge.sev-medium { background: rgba(250,204,21,0.24); }
+      body.theme-light .badge.sev-high { background: rgba(248,113,113,0.24); }
+      body.theme-light .badge.sev-critical { background: rgba(168,85,247,0.26); }
+      body.theme-light .badge.status-open { background: rgba(34,197,94,0.18); }
+      body.theme-light .badge.status-investigate { background: rgba(56,189,248,0.18); }
+      body.theme-light .badge.status-fixed { background: rgba(148,163,184,0.14); }
+      body.theme-light .badge.status-duplicate { background: rgba(248,113,113,0.18); }
+      .badge.status-duplicate { background: rgba(248, 113, 113, 0.24); }
+      .comments { margin-top: 16px; display: grid; gap: 14px; }
+      .glass-panel { background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(125, 211, 252, 0.12); padding: 18px; border-radius: 20px; }
+      .note { color: var(--text-muted); font-size: 0.95rem; }
+      .light-text { color: #e2e8f0; }
+      .link-button { background: rgba(125, 211, 252, 0.12); color: var(--accent); }
+      .link-button:hover { background: rgba(125, 211, 252, 0.18); }
+      .hr { border: none; height: 1px; background: rgba(148, 163, 184, 0.14); margin: 16px 0; }
+      body.theme-light {
+        --bg: #f8fafc;
+        --surface: rgba(248, 250, 252, 0.95);
+        --surface-strong: rgba(255, 255, 255, 0.98);
+        --surface-soft: rgba(248, 250, 252, 0.94);
+        --text: #0f172a;
+        --text-muted: #475569;
+        --accent: #0ea5e9;
+        --accent-soft: rgba(14, 165, 233, 0.18);
+        --border: rgba(14, 165, 233, 0.16);
+        --success: #16a34a;
+        --warning: #f59e0b;
+        --danger: #be123c;
+        background: radial-gradient(circle at 8% 8%, rgba(14, 165, 233, 0.08), transparent 22%),
+                    radial-gradient(circle at 95% 3%, rgba(56, 189, 248, 0.08), transparent 16%),
+                    linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+      }
+      body.theme-light .card {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(243, 244, 255, 0.95));
+        box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+      }
+      body.theme-light .glass-panel,
+      body.theme-light input[type=text],
+      body.theme-light select,
+      body.theme-light textarea {
+        background: rgba(255, 255, 255, 0.9);
+        border-color: rgba(14, 165, 233, 0.14);
+        color: #0f172a;
+      }
+      body.theme-light h1,
+      body.theme-light h2,
+      body.theme-light h3,
+      body.theme-light h4 {
+        color: #0f172a;
+      }
+      body.theme-light .note,
+      body.theme-light .meta,
+      body.theme-light .page-header .subtitle,
+      body.theme-light .theme-toggle {
+        color: #334155;
+      }
+      body.theme-light .theme-toggle {
+        background: rgba(248, 250, 252, 0.9);
+        border-color: rgba(14, 165, 233, 0.22);
+      }
+      body.theme-light button {
+        color: #020617;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 26px;
+      }
+      .theme-toggle {
+        border-radius: 999px;
+        border: 1px solid rgba(125, 211, 252, 0.22);
+        background: rgba(15, 23, 42, 0.65);
+        color: var(--text);
+        padding: 10px 16px;
+        cursor: pointer;
+        transition: background 0.25s ease, transform 0.25s ease;
+      }
+      .theme-toggle:hover {
+        background: rgba(56, 189, 248, 0.16);
+        transform: translateY(-1px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <h1><a href="/">Zeph Bug Tracker</a></h1>
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">Toggle theme</button>
+    </div>
+    {% block body %}{% endblock %}
+    <script>
+      const themeKey = 'ender-theme';
+      const current = localStorage.getItem(themeKey);
+      if (current === 'light') {
+        document.body.classList.add('theme-light');
+      }
+      function toggleTheme() {
+        const light = document.body.classList.toggle('theme-light');
+        localStorage.setItem(themeKey, light ? 'light' : 'dark');
+      }
+    </script>
+  </body>
+</html>

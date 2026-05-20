@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block body %}
+<div class="page-header">
+  <div>
+    <h1>Report a Bug</h1>
+    <p class="subtitle">Log a new issue and optionally seed sample bugs from Bugzilla.</p>
+  </div>
+  <div>
+    <a href="/"><button>Home</button></a>
+    <a href="/bugs"><button>Bug list</button></a>
+  </div>
+</div>
+<div class="page-grid">
+  <div class="panel">
+    <div class="glass-panel">
+      <h2>New bug report</h2>
+      <form id="report" method="post" action="/api/bugs" onsubmit="submitForm(event)">
+        <div class="form-group">
+          <label>Title</label>
+          <input id="title" name="title" required>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="description" name="description" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Severity</label>
+          <select id="severity" name="severity">
+            <option>low</option>
+            <option>medium</option>
+            <option>high</option>
+            <option>critical</option>
+          </select>
+        </div>
+        <button type="submit">Create bug</button>
+      </form>
+    </div>
+  </div>
+  <aside>
+    <div class="card">
+      <h3>Seed from Bugzilla</h3>
+      <p class="note">Populate the tracker with real Bugzilla issues using a public instance.</p>
+      <div class="panel">
+        <div class="form-group">
+          <label>Host</label>
+          <input id="bzHost" value="bugzilla.mozilla.org">
+        </div>
+        <div class="form-group">
+          <label>Product</label>
+          <input id="bzProduct" value="Firefox">
+        </div>
+        <div class="form-group">
+          <label>Limit</label>
+          <input id="bzLimit" value="10">
+        </div>
+        <button onclick="seedBugzilla()" type="button">Seed bugs</button>
+        <button onclick="deleteSeededBugzilla()" type="button" style="background: rgba(244, 63, 94, 0.12); color: #fbbf24; border: 1px solid rgba(244, 63, 94, 0.22);">Delete seeded bugs</button>
+        <div class="form-group">
+          <label>Admin token for full wipe</label>
+          <input id="clearToken" placeholder="enter admin token">
+        </div>
+        <button onclick="clearAllBugs()" type="button" style="background: rgba(244, 63, 94, 0.12); color: #fbbf24; border: 1px solid rgba(244, 63, 94, 0.22);">Wipe all bugs</button>
+      </div>
+    </div>
+  </aside>
+</div>
+<script>
+async function submitForm(e){
+  e.preventDefault();
+  const payload = {title:document.getElementById('title').value, description:document.getElementById('description').value, severity:document.getElementById('severity').value};
+  const r = await fetch('/api/bugs', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+  if(r.status===201){
+    const data = await r.json();
+    if(data.duplicates && data.duplicates.length){
+      alert('Possible duplicates detected. Check console.');
+      console.log('duplicates', data.duplicates);
+    }
+    window.location.href = '/bugs';
+  } else {
+    const err = await r.json();
+    alert('Error: ' + (err.error || 'Unable to create bug'));
+  }
+}
+
+async function seedBugzilla(){
+  const host = document.getElementById('bzHost').value;
+  const product = document.getElementById('bzProduct').value;
+  const limit = document.getElementById('bzLimit').value;
+  const r = await fetch('/seed/bugzilla', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({host, product, limit})});
+  if(r.ok){
+    const data = await r.json();
+    alert('Seeded ' + (data.created?.length || 0) + ' bugs');
+    window.location.href = '/bugs';
+  } else {
+    const t = await r.text();
+    alert('Error: ' + t);
+  }
+}
+
+async function deleteSeededBugzilla(){
+  if (!confirm('Delete only bugs imported from Bugzilla?')) {
+    return;
+  }
+  const r = await fetch('/seed/bugzilla/delete', {method:'POST'});
+  if (r.ok) {
+    const data = await r.json();
+    alert('Deleted ' + data.deleted + ' Bugzilla-seeded bugs.');
+    window.location.href = '/bugs';
+  } else {
+    const t = await r.text();
+    alert('Error: ' + t);
+  }
+}
+
+async function clearAllBugs(){
+  const token = document.getElementById('clearToken').value;
+  if (!token) {
+    alert('Please enter the admin token.');
+    return;
+  }
+  if (!confirm('This will permanently delete all bugs and comments. Continue?')) {
+    return;
+  }
+  const r = await fetch('/api/bugs/clear', {method:'POST', headers:{'Content-Type':'application/json','X-ADMIN-TOKEN': token}});
+  if (r.ok) {
+    const data = await r.json();
+    alert('Deleted ' + data.deleted + ' bugs.');
+    window.location.href = '/bugs';
+  } else {
+    const err = await r.json().catch(() => null);
+    alert('Error: ' + (err?.error || 'Unable to delete all bugs'));
+  }
+}
+</script>
+{% endblock %}
